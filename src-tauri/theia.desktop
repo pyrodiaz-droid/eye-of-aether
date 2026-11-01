@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name={{name}}
+Exec={{exec}} %f
+Icon={{icon}}
+Type=Application
+Categories=Utility;TextEditor;
+MimeType=text/markdown;text/plain;
+Terminal=false

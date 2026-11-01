@@ -1,0 +1,247 @@
+:root {
+  --bg: #fafafa;
+  --surface: #ffffff;
+  --text: #1a1a1a;
+  --text-muted: #6b6b6b;
+  --border: #e2e2e0;
+  --accent: #4a6fa5;
+  --accent-soft: #eef3f9;
+  --code-bg: #f2f2f0;
+  --danger: #b5443c;
+
+  --font-ui: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-reading: var(--font-ui);
+  --font-mono: ui-monospace, 'JetBrains Mono', 'Fira Code', monospace;
+
+  --measure: 72ch;
+  --radius: 6px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1b1c1e;
+    --surface: #232527;
+    --text: #e6e4e1;
+    --text-muted: #9a9894;
+    --border: #35373a;
+    --accent: #8aa9d4;
+    --accent-soft: #2a3340;
+    --code-bg: #2c2e31;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-ui);
+  font-size: 15px;
+}
+
+/* ── Toolbar ─────────────────────────────────────── */
+
+#toolbar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  user-select: none;
+}
+
+#app-name {
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  margin-right: 10px;
+  color: var(--accent);
+}
+
+#toolbar button {
+  font: inherit;
+  padding: 4px 12px;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+}
+
+#toolbar button:hover:not(:disabled) {
+  background: var(--accent-soft);
+}
+
+#toolbar button:disabled {
+  color: var(--text-muted);
+  cursor: default;
+}
+
+#file-label {
+  margin-left: auto;
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#dirty-dot {
+  color: var(--danger);
+  margin-left: 4px;
+}
+
+/* ── Reading / editing pane ──────────────────────── */
+
+#pane {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+
+.pane {
+  flex: 1;
+  overflow-y: auto;
+  outline: none;
+}
+
+#content {
+  padding: 40px 24px 80px;
+}
+
+#editor {
+  padding: 24px;
+  border: none;
+  resize: none;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  line-height: 1.6;
+  tab-size: 2;
+}
+
+/* ── Rendered markdown ───────────────────────────── */
+
+#content > * {
+  max-width: var(--measure);
+  margin-left: auto;
+  margin-right: auto;
+}
+
+#content h1,
+#content h2,
+#content h3,
+#content h4 {
+  font-weight: 650;
+  line-height: 1.3;
+  margin: 1.6em auto 0.5em;
+}
+
+#content h1 {
+  font-size: 1.9em;
+  margin-top: 0.2em;
+}
+
+#content h2 {
+  font-size: 1.45em;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.25em;
+}
+
+#content h3 {
+  font-size: 1.2em;
+}
+
+#content p,
+#content ul,
+#content ol,
+#content blockquote,
+#content table,
+#content pre {
+  line-height: 1.7;
+  margin-top: 0;
+  margin-bottom: 1em;
+}
+
+#content li {
+  line-height: 1.7;
+  margin-bottom: 0.25em;
+}
+
+#content a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+#content a:hover {
+  text-decoration: underline;
+}
+
+#content blockquote {
+  margin-inline: auto;
+  padding: 0.1em 1.2em;
+  border-left: 3px solid var(--accent);
+  color: var(--text-muted);
+  background: var(--accent-soft);
+  border-radius: 0 var(--radius) var(--radius) 0;
+}
+
+#content code {
+  font-family: var(--font-mono);
+  font-size: 0.88em;
+  background: var(--code-bg);
+  border-radius: 4px;
+  padding: 0.15em 0.4em;
+}
+
+#content pre {
+  padding: 14px 16px;
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow-x: auto;
+}
+
+#content pre code {
+  background: none;
+  padding: 0;
+  font-size: 0.88em;
+}
+
+#content table {
+  border-collapse: collapse;
+  margin-inline: auto;
+}
+
+#content th,
+#content td {
+  padding: 6px 14px;
+  border: 1px solid var(--border);
+  text-align: left;
+}
+
+#content th {
+  background: var(--surface);
+  font-weight: 600;
+}
+
+#content img {
+  max-width: 100%;
+  border-radius: var(--radius);
+}
+
+#content hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 2em auto;
+}
