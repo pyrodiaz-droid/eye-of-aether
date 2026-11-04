@@ -27,6 +27,13 @@
   "bundle": {
     "active": true,
     "targets": "all",
+    "fileAssociations": [
+      {
+        "ext": ["md", "markdown"],
+        "name": "Markdown Document",
+        "role": "Editor"
+      }
+    ],
     "linux": {
       "deb": {
         "desktopTemplate": "./theia.desktop"

@@ -8,8 +8,9 @@ In Greek myth, **Theia** is the Titaness of sight and shining light — she who 
 gold and gemstones their gleam, and mother of the Sun, the Moon, and the Dawn.
 Fitting, then, that her eye watches over your markdown.
 
-**Theia** is a markdown viewer and editor for Linux. Open a `.md` file and it reads
-like a document. Press one key and you see the raw text beneath. She sees both.
+**Theia** is a markdown viewer and editor for Linux, Windows, and macOS. Open a
+`.md` file and it reads like a document. Press one key and you see the raw text
+beneath. She sees both.
 
 ## What she does
 
@@ -19,9 +20,12 @@ like a document. Press one key and you see the raw text beneath. She sees both.
 - **Opens like water** — double-click any `.md` in your file manager, drag it onto the window, or `Ctrl+O`
 - **Saves without ceremony** — `Ctrl+S`; if you try to leave with unsaved words, she asks first
 
-## Install (Linux)
+## Install
 
-Two forms, same eye:
+Grab an installer from the [Releases](https://github.com/pyrodiaz-droid/eye-of-aether/releases) page —
+every release carries builds for all three of her homes.
+
+**Linux** — two forms, same eye:
 
 **Installed** — adds Theia to your applications menu and makes it the natural home of `.md` files:
 
@@ -37,6 +41,14 @@ chmod +x Theia_0.1.0_amd64.AppImage
 ```
 
 Both live under `src-tauri/target/release/bundle/` after a build.
+
+**Windows** — run the `.exe` installer (NSIS). It adds Theia to your Start menu,
+introduces her to `.md` files so they open on double-click, and fetches WebView2
+for you if it's missing. She is unsigned, so SmartScreen may raise an eyebrow —
+choose *More info → Run anyway* and she'll behave.
+
+**macOS** — open the `.dmg` and drag Theia to Applications. Also unsigned:
+on first launch, right-click the app and choose *Open* so Gatekeeper lets her in.
 
 ## Build from source
 
