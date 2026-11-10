@@ -106,6 +106,7 @@ body {
   flex: 1;
   min-height: 0;
   display: flex;
+  position: relative;
 }
 
 .pane {
@@ -128,6 +129,75 @@ body {
   font-size: 14px;
   line-height: 1.6;
   tab-size: 2;
+}
+
+/* ── Find bar ────────────────────────────────────── */
+
+#findbar {
+  position: absolute;
+  top: 10px;
+  right: 14px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  user-select: none;
+}
+
+/* display:flex overrides the hidden attribute's default, so re-hide explicitly */
+#findbar[hidden] {
+  display: none;
+}
+
+#find-input {
+  font: inherit;
+  padding: 4px 8px;
+  width: 200px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg);
+  color: var(--text);
+}
+
+#find-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+#findbar button {
+  font: inherit;
+  padding: 4px 10px;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+}
+
+#findbar button:hover {
+  background: var(--accent-soft);
+}
+
+#find-count {
+  min-width: 44px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.9em;
+}
+
+mark.hl {
+  background: var(--accent-soft);
+  color: inherit;
+}
+
+mark.hl-current {
+  background: var(--accent);
+  color: var(--surface);
 }
 
 /* ── Rendered markdown ───────────────────────────── */

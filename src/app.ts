@@ -5,6 +5,7 @@ import { getCurrentWindow } from '@tauri-apps/api/window'
 import { getCurrentWebview } from '@tauri-apps/api/webview'
 import { openUrl } from '@tauri-apps/plugin-opener'
 import { renderMarkdown } from './markdown'
+import { applyHighlights } from './search'
 
 interface AppState {
   readonly filePath: string | null
@@ -27,8 +28,20 @@ const fileLabel = $('file-label')
 const dirtyDot = $('dirty-dot')
 const btnMode = $('btn-mode') as HTMLButtonElement
 const btnSave = $('btn-save') as HTMLButtonElement
+const findbar = $('findbar')
+const findInput = $('find-input') as HTMLInputElement
+const findCount = $('find-count')
 
 let state: AppState = INITIAL_STATE
+
+// Find-in-document state is module-local: the bar is self-contained and its
+// keystrokes have no reason to flow through setState/syncUi
+let searchQuery = ''
+let matchEls: HTMLElement[] = []
+let matchIndex = -1
+
+// File passed on the command line — the only path the Rust write_back fallback serves
+let argvPath: string | null = null
 
 function setState(patch: Partial<AppState>): void {
   state = { ...state, ...patch }
@@ -46,7 +59,7 @@ function syncUi(): void {
   btnMode.textContent = isView ? 'Edit' : 'View'
   btnSave.disabled = !state.dirty
   dirtyDot.hidden = !state.dirty
-  const name = (state.filePath?.split('/').pop() ?? 'Untitled')
+  const name = (state.filePath ? fileNameFrom(state.filePath) : 'Untitled')
   fileLabel.textContent = name + (state.dirty ? ' — modified' : '')
   document.title = name
   if (isView) {
@@ -54,6 +67,39 @@ function syncUi(): void {
   } else if (editor.value !== state.text) {
     editor.value = state.text
   }
+  refreshHighlights()
+}
+
+// Highlights are wiped by every syncUi re-render (innerHTML reset), so they
+// are re-applied here after each render
+function refreshHighlights(): void {
+  matchEls = state.mode === 'view' ? applyHighlights(content, searchQuery) : []
+  if (matchIndex >= matchEls.length) matchIndex = matchEls.length - 1
+  matchEls.forEach((el, i) => el.classList.toggle('hl-current', i === matchIndex))
+  findCount.textContent = matchEls.length > 0 ? `${matchIndex + 1}/${matchEls.length}` : ''
+}
+
+function gotoMatch(delta: number): void {
+  if (matchEls.length === 0) return
+  matchIndex = (matchIndex + delta + matchEls.length) % matchEls.length
+  refreshHighlights()
+  matchEls[matchIndex].scrollIntoView({ block: 'center' })
+}
+
+function openFind(): void {
+  if (state.mode !== 'view') return
+  findbar.hidden = false
+  findInput.focus()
+  findInput.select()
+}
+
+function closeFind(): void {
+  findbar.hidden = true
+  searchQuery = ''
+  findInput.value = ''
+  matchIndex = -1
+  refreshHighlights()
+  content.focus() // bar is gone — focus must not sit on a hidden button
 }
 
 function scrollRatio(pane: HTMLElement): number {
@@ -69,11 +115,14 @@ function toggleMode(): void {
   const after = visiblePane()
   const max = after.scrollHeight - after.clientHeight
   after.scrollTop = ratio * max
-  if (next === 'edit') editor.focus()
+  if (next === 'edit') {
+    if (!findbar.hidden) closeFind()
+    editor.focus()
+  }
 }
 
 function fileNameFrom(path: string): string {
-  return path.split('/').pop() ?? path
+  return path.split(/[\\/]/).pop() ?? path
 }
 
 async function openPath(path: string): Promise<void> {
@@ -97,8 +146,10 @@ async function openDialog(): Promise<void> {
 async function writeAnywhere(target: string, text: string): Promise<void> {
   try {
     await writeTextFile(target, text)
-  } catch {
-    // fs-plugin scope rejection (e.g. argv-opened file) → exact-path Rust fallback
+  } catch (err) {
+    // fs-plugin scope rejection → Rust fallback, but only for the exact argv-opened
+    // file it was built for; anything else means the plugin failure IS the real error
+    if (target !== argvPath) throw err
     await invoke('write_back', { path: target, contents: text })
   }
 }
@@ -154,11 +205,41 @@ function wireEvents(): void {
   content.addEventListener('click', (e) => {
     const anchor = (e.target as HTMLElement).closest('a')
     if (!anchor) return
+    const rawHref = anchor.getAttribute('href') ?? ''
+    if (rawHref.startsWith('#')) return // in-document fragment — let the browser scroll
     e.preventDefault()
-    openUrl(anchor.href).catch((err) => void alertError(`Could not open link ${anchor.href}`, err))
+    if (/^https?:/i.test(anchor.href)) {
+      openUrl(anchor.href).catch((err) => void alertError(`Could not open link ${anchor.href}`, err))
+    }
+    // other schemes (mailto: etc.) are swallowed silently — opener errors on them
   })
 
+  findInput.addEventListener('input', () => {
+    searchQuery = findInput.value
+    matchIndex = 0
+    refreshHighlights()
+    if (matchEls.length > 0) matchEls[matchIndex].scrollIntoView({ block: 'center' })
+  })
+
+  findInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      gotoMatch(e.shiftKey ? -1 : 1)
+    } else if (e.key === 'Escape') {
+      e.preventDefault()
+      closeFind()
+    }
+  })
+
+  $('find-prev').addEventListener('click', () => gotoMatch(-1))
+  $('find-next').addEventListener('click', () => gotoMatch(1))
+  $('find-close').addEventListener('click', () => closeFind())
+
   window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !findbar.hidden) {
+      closeFind()
+      return
+    }
     if (!(e.ctrlKey || e.metaKey)) return
     const key = e.key.toLowerCase()
     if (key === 's') {
@@ -170,6 +251,9 @@ function wireEvents(): void {
     } else if (key === 'o') {
       e.preventDefault()
       void openDialog()
+    } else if (key === 'f') {
+      e.preventDefault()
+      openFind()
     } else if (key === 'n') {
       e.preventDefault()
       void newFile()
@@ -199,6 +283,7 @@ syncUi()
 void invoke<{ path: string; contents: string } | null>('open_initial_file')
   .then((initial) => {
     if (initial) {
+      argvPath = initial.path
       setState({ filePath: initial.path, text: initial.contents, dirty: false, mode: 'view' })
     }
   })

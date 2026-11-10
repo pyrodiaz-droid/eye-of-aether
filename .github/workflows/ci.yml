@@ -1,0 +1,32 @@
+name: 'ci'
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+      - name: Frontend tests and build
+        run: |
+          npm ci
+          npm test
+          npm run build
+      - name: Rust lint and tests
+        working-directory: src-tauri
+        run: |
+          cargo clippy -- -D warnings
+          cargo test
